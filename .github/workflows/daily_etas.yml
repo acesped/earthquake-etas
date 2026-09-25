@@ -1,19 +1,20 @@
 name: ETAS Chile Daily Forecast
 
 on:
+  schedule:
+    # 09:00 São Paulo = 12:00 UTC
+    - cron: "0 12 * * *"
+
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: etas-chile-daily
-  cancel-in-progress: false
-
 jobs:
   run-etas:
 
     runs-on: ubuntu-latest
+
     timeout-minutes: 90
 
     env:
@@ -40,7 +41,7 @@ jobs:
 
       - name: Show execution information
         run: |
-          echo "Event: ${{ github.event_name }}"
+          echo "Trigger: ${{ github.event_name }}"
           echo "Repository: ${{ github.repository }}"
           echo "Branch: ${{ github.ref }}"
           echo "UTC:"
