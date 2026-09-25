@@ -3,7 +3,7 @@ name: ETAS Chile Daily Forecast
 on:
   schedule:
     # 09:00 São Paulo = 12:00 UTC
-    - cron: "0 12 * * *"
+   - cron: "7,17,27,37,47,57 * * * *"
 
   workflow_dispatch:
 
