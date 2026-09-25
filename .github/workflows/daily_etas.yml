@@ -1,17 +1,48 @@
-name: ETAS Scheduler Test
+name: ETAS Chile Daily Forecast
 
 on:
-  schedule:
-    - cron: "11,21,31,41,51 * * * *"
-
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  run-etas:
+
     runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    env:
+      MPLBACKEND: Agg
+      PYTHONUNBUFFERED: "1"
 
     steps:
-      - name: Test scheduler
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade pip
         run: |
-          echo "Event: ${{ github.event_name }}"
-          date -u
+          python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run ETAS forecast
+        run: |
+          python etas_daily.py
+
+      - name: Upload forecast outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: etas-daily-output-${{ github.run_number }}
+          path: output/
+          if-no-files-found: warn
+          retention-days: 30
