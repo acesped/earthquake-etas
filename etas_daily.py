@@ -58,11 +58,18 @@ warnings.filterwarnings("ignore")
 # 1. CONFIGURACIÓN GENERAL
 # ============================================================
 
+# Un único reloj UTC para toda la ejecución.
+# La descarga termina en este instante y el forecast comienza aquí.
+# De esta forma, aunque no ocurra un nuevo sismo, la edad temporal
+# de los eventos avanza entre ejecuciones y el término ETAS/Omori
+# se actualiza correctamente.
+RUN_TIME_UTC = pd.Timestamp.now(tz="UTC")
+
 CONFIG = {
     "start_date": "2015-01-01",
 
-    # Timestamp completo UTC para no perder los eventos del día actual.
-    "end_date": pd.Timestamp.now(tz="UTC"),
+    # Mismo instante de corte utilizado por todo el pipeline.
+    "end_date": RUN_TIME_UTC,
 
     "min_latitude": -56.0,
     "max_latitude": -17.0,
@@ -101,7 +108,8 @@ CONFIG = {
 
     "trigger_memory_days": 365.25 * 5,
 
-    "forecast_start": None,
+    # El forecast operacional comienza en la hora real de ejecución.
+    "forecast_start": RUN_TIME_UTC,
 
     "forecast_horizons_days": {
         "24h": 1.0,
@@ -177,17 +185,10 @@ TWITTER_CONFIG = {
 X_CREDENTIALS = {
     "use_hardcoded_credentials": True,
 
-    "X_API_KEY":
-        "9AzJWYmkyeBHinuhO1J53JzrM",
-
-    "X_API_SECRET":
-        "0GYUdymBTrM15Ml1Fr8YwJvXsxQQbMB1zq2UHzbXfMIyfrFoNU",
-
-    "X_ACCESS_TOKEN":
-        "3064940565-tV1WBu3bAl0OhvY4rM7uOHjFycTgFZud3xC7BmG",
-
-    "X_ACCESS_TOKEN_SECRET":
-        "q1BlsjRuBMGoFXdkl8pPXyCA93My0kdDexiHmjKCLvs3E"
+    "X_API_KEY": "PEGA_AQUI_TU_API_KEY",
+    "X_API_SECRET": "PEGA_AQUI_TU_API_SECRET",
+    "X_ACCESS_TOKEN": "PEGA_AQUI_TU_ACCESS_TOKEN",
+    "X_ACCESS_TOKEN_SECRET": "PEGA_AQUI_TU_ACCESS_TOKEN_SECRET"
 }
 
 
@@ -2686,7 +2687,7 @@ def build_x_post_text(
     )
 
     text = (
-        "Probabilidad de Sismo en Chile 🇨🇱\n\n"
+        "Actualización ETAS Chile 🇨🇱\n"
         f"M≥4 24h:{p4_24:.1f}% 7d:{p4_7:.1f}% 30d:{p4_30:.1f}%\n"
         f"M≥5 24h:{p5_24:.1f}% 7d:{p5_7:.1f}% 30d:{p5_30:.1f}%\n"
         f"M≥6 24h:{p6_24:.1f}% 7d:{p6_7:.1f}% 30d:{p6_30:.1f}%\n"
@@ -2697,8 +2698,8 @@ def build_x_post_text(
         "include_disclaimer"
     ]:
         text += (
-            "\n\nModelo estadístico experimental; "
-            "no constituye una alerta ni una predicción determinista."
+            "\nModelo estadístico experimental; "
+            "no es alerta ni predicción determinista."
         )
 
     return text
@@ -3058,29 +3059,40 @@ def main():
             "El catálogo ETAS quedó vacío."
         )
 
-    if (
-        CONFIG[
-            "forecast_start"
-        ]
-        is None
-    ):
-        forecast_start = (
-            etas_catalog[
-                "time"
-            ].max()
-        )
-    else:
-        forecast_start = (
-            ensure_utc_timestamp(
-                CONFIG[
-                    "forecast_start"
-                ]
-            )
-        )
+    # IMPORTANTE:
+    # El forecast se ancla a la hora real de esta ejecución, no al
+    # timestamp del último terremoto del catálogo. Esto permite que
+    # el decaimiento temporal ETAS/Omori avance correctamente cada día.
+    forecast_start = ensure_utc_timestamp(
+        CONFIG["forecast_start"]
+    )
+
+    last_catalog_event = ensure_utc_timestamp(
+        etas_catalog["time"].max()
+    )
+
+    last_event_age_hours = (
+        forecast_start - last_catalog_event
+    ).total_seconds() / 3600.0
 
     print(
         "\nInicio forecast:",
         forecast_start
+    )
+
+    print(
+        "Hora única de ejecución UTC:",
+        RUN_TIME_UTC
+    )
+
+    print(
+        "Último evento del catálogo ETAS:",
+        last_catalog_event
+    )
+
+    print(
+        "Edad del último evento al iniciar forecast [horas]:",
+        f"{last_event_age_hours:.6f}"
     )
 
     training_start = (
@@ -3353,6 +3365,115 @@ def main():
         forecast_summary.to_string(
             index=False
         )
+    )
+
+    # ========================================================
+    # DIAGNÓSTICO DE ACTUALIZACIÓN DIARIA
+    #
+    # Estas líneas imprimen suficientes decimales para distinguir
+    # cambios reales del modelo que pueden quedar ocultos por el
+    # redondeo a 1 decimal usado en la lámina y en X.
+    # ========================================================
+
+    print(
+        "\n"
+        +
+        "=" * 72
+    )
+
+    print(
+        "DIAGNÓSTICO DE ACTUALIZACIÓN DIARIA"
+    )
+
+    print(
+        "=" * 72
+    )
+
+    print(
+        "RUN_TIME_UTC:",
+        RUN_TIME_UTC
+    )
+
+    print(
+        "FORECAST_START:",
+        forecast_start
+    )
+
+    print(
+        "ÚLTIMO EVENTO ETAS:",
+        last_catalog_event
+    )
+
+    print(
+        "EDAD ÚLTIMO EVENTO [horas]:",
+        f"{last_event_age_hours:.8f}"
+    )
+
+    print(
+        "EVENTOS CATÁLOGO ETAS:",
+        len(etas_catalog)
+    )
+
+    print(
+        "EVENTOS ENTRENAMIENTO:",
+        len(final_train)
+    )
+
+    print(
+        "Mc:",
+        f"{mc:.8f}"
+    )
+
+    print(
+        "b-value:",
+        f"{b_value:.8f}"
+    )
+
+    print(
+        "d espacial [km]:",
+        f"{d_km:.8f}"
+    )
+
+    for diagnostic_horizon in [
+        "24h",
+        "7d",
+        "30d"
+    ]:
+        for diagnostic_magnitude in [
+            4.0,
+            5.0,
+            6.0
+        ]:
+            diagnostic_probability = (
+                forecast_results[
+                    diagnostic_horizon
+                ][
+                    diagnostic_magnitude
+                ][
+                    "domain_probability"
+                ]
+            )
+
+            diagnostic_lambda = (
+                forecast_results[
+                    diagnostic_horizon
+                ][
+                    diagnostic_magnitude
+                ][
+                    "domain_lambda"
+                ]
+            )
+
+            print(
+                f"{diagnostic_horizon:>3} "
+                f"M≥{diagnostic_magnitude:.0f} | "
+                f"P={diagnostic_probability:.12f} | "
+                f"P%={diagnostic_probability * 100.0:.10f}% | "
+                f"lambda={diagnostic_lambda:.12f}"
+            )
+
+    print(
+        "=" * 72
     )
 
     main_horizon = POSTER_CONFIG[
