@@ -166,7 +166,7 @@ TWITTER_CONFIG = {
     "enabled": True,
     "attach_image": True,
     "include_disclaimer": True,
-    "fail_silently": True
+    "fail_silently": False
 }
 
 
@@ -185,10 +185,10 @@ TWITTER_CONFIG = {
 X_CREDENTIALS = {
     "use_hardcoded_credentials": True,
 
-    "X_API_KEY": "XG2a4PQqp7zfznz7rDVKI7qKp",
-    "X_API_SECRET": "Cy41PViw2wHhf7j4h5WYsz3N1S0sJicF2l4X1mj4K36hYFQUTM",
-    "X_ACCESS_TOKEN": "2561368769-BOKUr2SiA9eGiXnCAY2P4SDPrvB8VBMcGuvsqJv",
-    "X_ACCESS_TOKEN_SECRET": "EVhEgbLG492pGIrczphaUiRaf76R7qowCcRwunVuh9I1V"
+    "X_API_KEY": "hHmhKcSeDBD94POhEGCSa2oCd",
+    "X_API_SECRET": "wqLWHJlAaWa3TNeCAlTMa4EV7qqcO2mrosL0ybwSZASyUFtM9C",
+    "X_ACCESS_TOKEN": "2561368769-1RiMOhfqtVsTB3zSQD3P712j71cCZq0ILik9BPN",
+    "X_ACCESS_TOKEN_SECRET": "UOTxm93FcxXS5rwDcvYtICItxCKTcoUaysklbOx8R8Uia"
 }
 
 
@@ -2580,126 +2580,46 @@ def build_x_post_text(
     forecast_results,
     top_zones
 ):
-    p4_24 = (
-        forecast_results[
-            "24h"
-        ][4.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
+    p4_24 = forecast_results["24h"][4.0]["domain_probability"] * 100.0
+    p4_7 = forecast_results["7d"][4.0]["domain_probability"] * 100.0
+    p4_30 = forecast_results["30d"][4.0]["domain_probability"] * 100.0
 
-    p4_7 = (
-        forecast_results[
-            "7d"
-        ][4.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
+    p5_24 = forecast_results["24h"][5.0]["domain_probability"] * 100.0
+    p5_7 = forecast_results["7d"][5.0]["domain_probability"] * 100.0
+    p5_30 = forecast_results["30d"][5.0]["domain_probability"] * 100.0
 
-    p4_30 = (
-        forecast_results[
-            "30d"
-        ][4.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
-
-    p5_24 = (
-        forecast_results[
-            "24h"
-        ][5.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
-
-    p5_7 = (
-        forecast_results[
-            "7d"
-        ][5.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
-
-    p5_30 = (
-        forecast_results[
-            "30d"
-        ][5.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
-
-    p6_24 = (
-        forecast_results[
-            "24h"
-        ][6.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
-
-    p6_7 = (
-        forecast_results[
-            "7d"
-        ][6.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
-
-    p6_30 = (
-        forecast_results[
-            "30d"
-        ][6.0][
-            "domain_probability"
-        ]
-        *
-        100.0
-    )
+    p6_24 = forecast_results["24h"][6.0]["domain_probability"] * 100.0
+    p6_7 = forecast_results["7d"][6.0]["domain_probability"] * 100.0
+    p6_30 = forecast_results["30d"][6.0]["domain_probability"] * 100.0
 
     top = top_zones.iloc[0]
 
-    top_lat = float(
-        top["latitude"]
-    )
-
-    top_lon = float(
-        top["longitude"]
-    )
-
-    top_prob = float(
-        top[
-            "probability_percent"
-        ]
-    )
+    top_lat = float(top["latitude"])
+    top_lon = float(top["longitude"])
+    top_prob = float(top["probability_percent"])
 
     text = (
         "Actualización ETAS Chile 🇨🇱\n"
-        f"M≥4 24h:{p4_24:.1f}% 7d:{p4_7:.1f}% 30d:{p4_30:.1f}%\n"
-        f"M≥5 24h:{p5_24:.1f}% 7d:{p5_7:.1f}% 30d:{p5_30:.1f}%\n"
-        f"M≥6 24h:{p6_24:.1f}% 7d:{p6_7:.1f}% 30d:{p6_30:.1f}%\n"
-        f"Máx M≥5/7d: {top_lat:.2f},{top_lon:.2f} ({top_prob:.2f}%)"
+        f"M≥4: 24h {p4_24:.2f}% · 7d {p4_7:.2f}% · 30d {p4_30:.2f}%\n"
+        f"M≥5: 24h {p5_24:.2f}% · 7d {p5_7:.2f}% · 30d {p5_30:.2f}%\n"
+        f"M≥6: 24h {p6_24:.2f}% · 7d {p6_7:.2f}% · 30d {p6_30:.2f}%\n"
+        f"Máx. local M≥5/7d: {top_lat:.2f}°, {top_lon:.2f}° ({top_prob:.2f}%)."
     )
 
-    if TWITTER_CONFIG[
-        "include_disclaimer"
-    ]:
+    if TWITTER_CONFIG["include_disclaimer"]:
         text += (
             "\nModelo estadístico experimental; "
             "no es alerta ni predicción determinista."
+        )
+
+    if len(text) > 275:
+        text = (
+            "Actualización ETAS Chile 🇨🇱\n"
+            f"M≥4 24h:{p4_24:.1f}% 7d:{p4_7:.1f}% 30d:{p4_30:.1f}%\n"
+            f"M≥5 24h:{p5_24:.1f}% 7d:{p5_7:.1f}% 30d:{p5_30:.1f}%\n"
+            f"M≥6 24h:{p6_24:.1f}% 7d:{p6_7:.1f}% 30d:{p6_30:.1f}%\n"
+            f"Máx M≥5/7d: {top_lat:.2f},{top_lon:.2f} ({top_prob:.2f}%)\n"
+            "Modelo estadístico experimental; no es alerta ni predicción determinista."
         )
 
     return text
@@ -2770,6 +2690,19 @@ def publish_to_x(
     )
 
     api_v1 = tweepy.API(auth)
+
+    print("Verificando autenticación X...")
+
+    authenticated_user = api_v1.verify_credentials()
+
+    if authenticated_user is None:
+        raise RuntimeError(
+            "X no pudo verificar las credenciales OAuth."
+        )
+
+    print(
+        f"✓ Autenticación X correcta: @{authenticated_user.screen_name}"
+    )
 
     client_v2 = tweepy.Client(
         consumer_key=credentials[
@@ -3824,3 +3757,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
