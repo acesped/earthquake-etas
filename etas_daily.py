@@ -185,10 +185,10 @@ TWITTER_CONFIG = {
 X_CREDENTIALS = {
     "use_hardcoded_credentials": True,
 
-    "X_API_KEY": "hHmhKcSeDBD94POhEGCSa2oCd",
-    "X_API_SECRET": "wqLWHJlAaWa3TNeCAlTMa4EV7qqcO2mrosL0ybwSZASyUFtM9C",
-    "X_ACCESS_TOKEN": "2561368769-1RiMOhfqtVsTB3zSQD3P712j71cCZq0ILik9BPN",
-    "X_ACCESS_TOKEN_SECRET": "UOTxm93FcxXS5rwDcvYtICItxCKTcoUaysklbOx8R8Uia"
+    "X_API_KEY": "V2r1iCO4PAav08YPoBg3VjMfe",
+    "X_API_SECRET": "paYNxADSWueZ1FMtFRWF6XgJXXVxxOxOIEBsLSY4Q8O3mhjZdr",
+    "X_ACCESS_TOKEN": "3064940565-ypTQHFTDKkWFNGr6gHoHOljLql2hLRlnpQumG2f",
+    "X_ACCESS_TOKEN_SECRET": "NkpMvqYLtLMtsD6L25afc36gshv901MXxFWvcK0PGCdlp"
 }
 
 
@@ -2614,12 +2614,12 @@ def build_x_post_text(
 
     if len(text) > 275:
         text = (
-            "Actualización ETAS Chile 🇨🇱\n"
+            "Actualización ETAS Chile 🇨🇱\n\n"
             f"M≥4 24h:{p4_24:.1f}% 7d:{p4_7:.1f}% 30d:{p4_30:.1f}%\n"
             f"M≥5 24h:{p5_24:.1f}% 7d:{p5_7:.1f}% 30d:{p5_30:.1f}%\n"
             f"M≥6 24h:{p6_24:.1f}% 7d:{p6_7:.1f}% 30d:{p6_30:.1f}%\n"
-            f"Máx M≥5/7d: {top_lat:.2f},{top_lon:.2f} ({top_prob:.2f}%)\n"
-            "Modelo estadístico experimental; no es alerta ni predicción determinista."
+            f"Máx M≥5/7d: {top_lat:.2f},{top_lon:.2f} ({top_prob:.2f}%)\n\n"
+            "Modelo estadístico experimental; no es una alerta ni una predicción determinista."
         )
 
     return text
