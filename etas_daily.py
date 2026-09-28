@@ -2599,7 +2599,7 @@ def build_x_post_text(
     top_prob = float(top["probability_percent"])
 
     text = (
-        "Actualización ETAS Chile 🇨🇱\n"
+        "Probabilidad de Sismo en Chile 🇨🇱\n"
         f"M≥4: 24h {p4_24:.2f}% · 7d {p4_7:.2f}% · 30d {p4_30:.2f}%\n"
         f"M≥5: 24h {p5_24:.2f}% · 7d {p5_7:.2f}% · 30d {p5_30:.2f}%\n"
         f"M≥6: 24h {p6_24:.2f}% · 7d {p6_7:.2f}% · 30d {p6_30:.2f}%\n"
@@ -2608,13 +2608,13 @@ def build_x_post_text(
 
     if TWITTER_CONFIG["include_disclaimer"]:
         text += (
-            "\nModelo estadístico experimental; "
+            "\n\nModelo estadístico experimental; "
             "no es alerta ni predicción determinista."
         )
 
     if len(text) > 275:
         text = (
-            "Actualización ETAS Chile 🇨🇱\n\n"
+            "Probabilidad de Sismo en Chile 🇨🇱\n\n"
             f"M≥4 24h:{p4_24:.1f}% 7d:{p4_7:.1f}% 30d:{p4_30:.1f}%\n"
             f"M≥5 24h:{p5_24:.1f}% 7d:{p5_7:.1f}% 30d:{p5_30:.1f}%\n"
             f"M≥6 24h:{p6_24:.1f}% 7d:{p6_7:.1f}% 30d:{p6_30:.1f}%\n"
